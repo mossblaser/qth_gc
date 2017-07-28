@@ -32,3 +32,11 @@ Enjoy:
 
     $ qth_gc
     No garbage to delete.
+
+Warning
+-------
+
+Will fail to find topics which don't contain valid JSON values and will
+indiscriminately publish empty, retained messages to both retained and
+ephemeral topics it sees. In short, if your broker also has non-Qth compliant
+clients, here be dragons!

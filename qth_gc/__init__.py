@@ -109,7 +109,8 @@ def main(args=None):
     client = qth.Client("qth_gc", host=args.host, port=args.port, loop=loop)
     try:
         # Discover all garbage and print to the command line
-        topics = loop.run_until_complete(get_all_topics(client, loop=loop))
+        topics = loop.run_until_complete(get_all_topics(
+            client, wait=args.load_time, loop=loop))
         garbage = find_garbage(topics)
         
         # Print the garbage

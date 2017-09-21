@@ -87,10 +87,10 @@ def main(args=None):
     parser.add_argument("--version", "-V", action="version",
                         version="%(prog)s {}".format(__version__))
     parser.add_argument("--host",
-                        default="localhost",
+                        default=None,
                         help="The hostname of the MQTT broker.")
     parser.add_argument("--port",
-                        default=1883, type=int,
+                        default=None, type=int,
                         help="The port number for the MQTT broker.")
     parser.add_argument("--load-time",
                         default=3.0, type=float,

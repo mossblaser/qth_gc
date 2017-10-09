@@ -14,11 +14,15 @@ async def get_all_topics(client, wait=3.0, loop=asyncio.get_event_loop()):
     global subscription.
     """
     topics = {}
+    changed = [True]
     
     def on_message(topic, payload):
         topics[topic] = payload
+        changed[0] = True
     await client.subscribe("#", on_message)
-    await asyncio.sleep(wait, loop=loop)
+    while changed[0]:
+        await asyncio.sleep(wait, loop=loop)
+        changed[0] = False
     await client.unsubscribe("#", on_message)
     return topics
 
@@ -94,8 +98,8 @@ def main(args=None):
                         help="The port number for the MQTT broker.")
     parser.add_argument("--load-time",
                         default=3.0, type=float,
-                        help="The number of seconds to wait for every "
-                             "retained topic's message to arrive after "
+                        help="The number of seconds to wait for the "
+                             "retained topics to stop arriving after "
                              "subscription.")
     parser.add_argument("--remove", "-r", action="store_true",
                         help="Remove the discovered garbage entries.")
@@ -106,6 +110,7 @@ def main(args=None):
     args = parser.parse_args(args)
     
     loop = asyncio.get_event_loop()
+    loop.set_debug(True)
     client = qth.Client("qth_gc", host=args.host, port=args.port, loop=loop)
     try:
         # Discover all garbage and print to the command line

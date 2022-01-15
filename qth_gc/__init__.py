@@ -9,7 +9,7 @@ import asyncio
 from qth_gc.version import __version__
 
 
-async def get_all_topics(client, wait=3.0, loop=asyncio.get_event_loop()):
+async def get_all_topics(client, wait=3.0):
     """Gather a dictionary of all topic/message pairs received in response to a
     global subscription.
     """
@@ -21,7 +21,7 @@ async def get_all_topics(client, wait=3.0, loop=asyncio.get_event_loop()):
         changed[0] = True
     await client.subscribe("#", on_message)
     while changed[0]:
-        await asyncio.sleep(wait, loop=loop)
+        await asyncio.sleep(wait)
         changed[0] = False
     await client.unsubscribe("#", on_message)
     return topics
@@ -67,12 +67,11 @@ def find_garbage(topics):
     return all_topics - registered_topics
 
 
-async def delete_garbage(client, garbage, loop=asyncio.get_event_loop()):
+async def delete_garbage(client, garbage):
     """Delete all topics listed as garbage."""
     if garbage:
-        done, pending = await asyncio.wait([client.delete_property(topic)
-                                            for topic in garbage],
-                                           loop=loop)
+        done, pending = await asyncio.wait([asyncio.create_task(client.delete_property(topic))
+                                            for topic in garbage])
         assert len(pending) == 0
 
 
@@ -111,11 +110,11 @@ def main(args=None):
     
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
-    client = qth.Client("qth_gc", host=args.host, port=args.port, loop=loop)
+    client = qth.Client("qth_gc", host=args.host, port=args.port)
     try:
         # Discover all garbage and print to the command line
         topics = loop.run_until_complete(get_all_topics(
-            client, wait=args.load_time, loop=loop))
+            client, wait=args.load_time))
         garbage = find_garbage(topics)
         
         # Print the garbage
@@ -146,7 +145,7 @@ def main(args=None):
                     return 1
             
             # Delete the entries
-            loop.run_until_complete(delete_garbage(client, garbage, loop=loop))
+            loop.run_until_complete(delete_garbage(client, garbage))
             return 0
     finally:
         loop.run_until_complete(client.close())
